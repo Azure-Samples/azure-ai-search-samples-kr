@@ -1,0 +1,397 @@
+# python 으로 학습한 01.crate_index 노트북의 내용을 rest api를 이용하여 구현합니다.
+# rest api에 대한 내용은 아래 페이지를 확인해 주세요.
+#
+# https://learn.microsoft.com/ko-kr/rest/api/searchservice/?view=rest-searchservice-2024-07-01
+
+@endpoint = https://<your-search-service>.search.windows.net
+@apiKey = <api key>
+@search-api-version = 2024-07-01
+@index-name = hotels-quickstart-rest
+
+### index 리스트 확인
+# https://learn.microsoft.com/ko-kr/rest/api/searchservice/indexes/get?view=rest-searchservice-2024-07-01
+GET  {{endpoint}}/indexes?api-version={{search-api-version}}  HTTP/1.1
+    Content-Type: application/json
+    api-key: {{apiKey}}
+
+### index 생성
+# https://learn.microsoft.com/ko-kr/rest/api/searchservice/indexes/create?view=rest-searchservice-2024-07-01
+POST  {{endpoint}}/indexes?api-version={{search-api-version}}  HTTP/1.1
+    Content-Type: application/json
+    api-key: {{apiKey}}
+
+{
+    "name": "{{index-name}}",
+    "fields":
+    [
+        {
+            "name": "HotelId",
+            "type": "Edm.String",
+            "searchable": false,
+            "filterable": false,
+            "retrievable": true,
+            "stored": true,
+            "sortable": false,
+            "facetable": false,
+            "key": true
+        },
+        {
+            "name": "HotelName",
+            "type": "Edm.String",
+            "searchable": true,
+            "filterable": false,
+            "retrievable": true,
+            "stored": true,
+            "sortable": true,
+            "facetable": false,
+            "key": false
+        },
+        {
+            "name": "Description",
+            "type": "Edm.String",
+            "searchable": true,
+            "filterable": false,
+            "retrievable": true,
+            "stored": true,
+            "sortable": false,
+            "facetable": false,
+            "key": false,
+            "analyzer": "en.lucene"
+        },
+        {
+            "name": "Description_fr",
+            "type": "Edm.String",
+            "searchable": true,
+            "filterable": false,
+            "retrievable": true,
+            "stored": true,
+            "sortable": false,
+            "facetable": false,
+            "key": false,
+            "analyzer": "fr.lucene"
+        },
+        {
+            "name": "Description_kr",
+            "type": "Edm.String",
+            "searchable": true,
+            "filterable": false,
+            "retrievable": true,
+            "stored": true,
+            "sortable": false,
+            "facetable": false,
+            "key": false,
+            "analyzer": "ko.lucene"
+        },
+        {
+            "name": "Category",
+            "type": "Edm.String",
+            "searchable": true,
+            "filterable": true,
+            "retrievable": true,
+            "stored": true,
+            "sortable": true,
+            "facetable": true,
+            "key": false
+        },
+        {
+            "name": "Tags",
+            "type": "Collection(Edm.String)",
+            "searchable": true,
+            "filterable": true,
+            "retrievable": true,
+            "stored": true,
+            "sortable": false,
+            "facetable": true,
+            "key": false
+        },
+        {
+            "name": "ParkingIncluded",
+            "type": "Edm.Boolean",
+            "searchable": false,
+            "filterable": true,
+            "retrievable": true,
+            "stored": true,
+            "sortable": true,
+            "facetable": true,
+            "key": false
+        },
+        {
+            "name": "LastRenovationDate",
+            "type": "Edm.DateTimeOffset",
+            "searchable": false,
+            "filterable": true,
+            "retrievable": true,
+            "stored": true,
+            "sortable": true,
+            "facetable": true,
+            "key": false
+        },
+        {
+            "name": "Rating",
+            "type": "Edm.Double",
+            "searchable": false,
+            "filterable": true,
+            "retrievable": true,
+            "stored": true,
+            "sortable": true,
+            "facetable": true,
+            "key": false
+        },
+        {
+            "name": "Address",
+            "type": "Edm.ComplexType",
+            "fields":
+            [
+                {
+                    "name": "StreetAddress",
+                    "type": "Edm.String",
+                    "searchable": true,
+                    "filterable": false,
+                    "retrievable": true,
+                    "stored": true,
+                    "sortable": false,
+                    "facetable": false,
+                    "key": false
+                },
+                {
+                    "name": "City",
+                    "type": "Edm.String",
+                    "searchable": true,
+                    "filterable": true,
+                    "retrievable": true,
+                    "stored": true,
+                    "sortable": true,
+                    "facetable": true,
+                    "key": false
+                },
+                {
+                    "name": "StateProvince",
+                    "type": "Edm.String",
+                    "searchable": true,
+                    "filterable": true,
+                    "retrievable": true,
+                    "stored": true,
+                    "sortable": true,
+                    "facetable": true,
+                    "key": false
+                },
+                {
+                    "name": "PostalCode",
+                    "type": "Edm.String",
+                    "searchable": true,
+                    "filterable": true,
+                    "retrievable": true,
+                    "stored": true,
+                    "sortable": true,
+                    "facetable": true,
+                    "key": false
+                },
+                {
+                    "name": "Country",
+                    "type": "Edm.String",
+                    "searchable": true,
+                    "filterable": true,
+                    "retrievable": true,
+                    "stored": true,
+                    "sortable": true,
+                    "facetable": true,
+                    "key": false
+                }
+            ]
+        }
+    ],
+    "suggesters":
+    [
+        {
+            "name": "sg",
+            "searchMode": "analyzingInfixMatching",
+            "sourceFields":
+            [
+                "Tags",
+                "Address/City",
+                "Address/Country"
+            ]
+        }
+    ]
+}
+
+### 생성한 index 확인
+# https://learn.microsoft.com/ko-kr/rest/api/searchservice/indexes/get?view=rest-searchservice-2024-07-01
+GET  {{endpoint}}/indexes('{{index-name}}')?api-version={{search-api-version}}  HTTP/1.1
+    Content-Type: application/json
+    api-key: {{apiKey}}
+
+### document indexing
+# https://learn.microsoft.com/ko-kr/rest/api/searchservice/documents/?view=rest-searchservice-2024-07-01
+POST  {{endpoint}}/indexes('{{index-name}}')/docs/search.index?api-version={{search-api-version}}  HTTP/1.1
+    Content-Type: application/json
+    api-key: {{apiKey}}
+
+{
+    "value": [
+        {
+            "@search.action": "mergeOrUpload",
+            "HotelId": "1",
+            "HotelName": "Secret Point Motel",
+            "Description": "The hotel is ideally located on the main commercial artery of the city in the heart of New York. A few minutes away is Time's Square and the historic centre of the city, as well as other places of interest that make New York one of America's most attractive and cosmopolitan cities.",
+            "Description_fr": "L'hôtel est idéalement situé sur la principale artère commerciale de la ville en plein cœur de New York. A quelques minutes se trouve la place du temps et le centre historique de la ville, ainsi que d'autres lieux d'intérêt qui font de New York l'une des villes les plus attractives et cosmopolites de l'Amérique.",
+            "Description_kr": "이 호텔은 뉴욕의 중심부에 있는 도시의 주요 상업 동맥에 이상적으로 위치해 있습니다. 몇 분 거리에 타임스 스퀘어와 뉴욕의 역사적인 중심지뿐만 아니라 뉴욕을 미국에서 가장 매력적이고 국제적인 도시로 만드는 다른 명소가 있습니다.",
+            "Category": "Boutique",
+            "Tags":
+            [
+                "pool",
+                "air conditioning",
+                "concierge"
+            ],
+            "ParkingIncluded": "false",
+            "LastRenovationDate": "1970-01-18T00:00:00Z",
+            "Rating": 3.60,
+            "Address":
+            {
+                "StreetAddress": "677 5th Ave",
+                "City": "New York",
+                "StateProvince": "NY",
+                "PostalCode": "10022",
+                "Country": "USA"
+            }
+        },
+        {
+            "@search.action": "mergeOrUpload",
+            "HotelId": "2",
+            "HotelName": "Twin Dome Motel",
+            "Description": "The hotel is situated in a  nineteenth century plaza, which has been expanded and renovated to the highest architectural standards to create a modern, functional and first-class hotel in which art and unique historical elements coexist with the most modern comforts.",
+            "Description_fr": "L'hôtel est situé dans une place du XIXe siècle, qui a été agrandie et rénovée aux plus hautes normes architecturales pour créer un hôtel moderne, fonctionnel et de première classe dans lequel l'art et les éléments historiques uniques coexistent avec le confort le plus moderne.",
+            "Description_kr": "이 호텔은 19세기 광장에 위치해 있으며, 예술과 독특한 역사적 요소가 가장 현대적인 편안함과 공존하는 현대적이고 기능적인 일류 호텔을 만들기 위해 최고 수준의 건축 표준으로 확장 및 개조 되었습니다.",
+            "Category": "Boutique",
+            "Tags":
+            [
+                "pool",
+                "free wifi",
+                "concierge"
+            ],
+            "ParkingIncluded": "false",
+            "LastRenovationDate": "1979-02-18T00:00:00Z",
+            "Rating": 3.60,
+            "Address":
+            {
+                "StreetAddress": "140 University Town Center Dr",
+                "City": "Sarasota",
+                "StateProvince": "FL",
+                "PostalCode": "34243",
+                "Country": "USA"
+            }
+        },
+        {
+            "@search.action": "mergeOrUpload",
+            "HotelId": "3",
+            "HotelName": "Triple Landscape Hotel",
+            "Description": "The Hotel stands out for its gastronomic excellence under the management of William Dough, who advises on and oversees all of the Hotel's restaurant services.",
+            "Description_fr": "L'hôtel est situé dans une place du XIXe siècle, qui a été agrandie et rénovée aux plus hautes normes architecturales pour créer un hôtel moderne, fonctionnel et de première classe dans lequel l'art et les éléments historiques uniques coexistent avec le confort le plus moderne.",
+            "Description_kr": "호텔의 모든 레스토랑 서비스를 자문하고 감독하는 윌리엄 도우(William Dough)의 관리 하에 뛰어난 미식 경험을 제공하는 것이 특징입니다.",
+            "Category": "Resort and Spa",
+            "Tags":
+            [
+                "air conditioning",
+                "bar",
+                "continental breakfast"
+            ],
+            "ParkingIncluded": "true",
+            "LastRenovationDate": "2015-09-20T00:00:00Z",
+            "Rating": 4.80,
+            "Address":
+            {
+                "StreetAddress": "3393 Peachtree Rd",
+                "City": "Atlanta",
+                "StateProvince": "GA",
+                "PostalCode": "30326",
+                "Country": "USA"
+            }
+        },
+        {
+            "@search.action": "mergeOrUpload",
+            "HotelId": "4",
+            "HotelName": "Sublime Cliff Hotel",
+            "Description": "Sublime Cliff Hotel is located in the heart of the historic center of Sublime in an extremely vibrant and lively area within short walking distance to the sites and landmarks of the city and is surrounded by the extraordinary beauty of churches, buildings, shops and monuments. Sublime Cliff is part of a lovingly restored 1800 palace.",
+            "Description_fr": "Le sublime Cliff Hotel est situé au coeur du centre historique de sublime dans un quartier extrêmement animé et vivant, à courte distance de marche des sites et monuments de la ville et est entouré par l'extraordinaire beauté des églises, des bâtiments, des commerces et Monuments. Sublime Cliff fait partie d'un Palace 1800 restauré avec amour.",
+            "Description_kr": "수블림 클리프 호텔은 도시의 유적지와 랜드마크에서 도보로 가까운 거리에 있는 매우 활기차고 활기찬 수블림의 역사적인 중심지에 위치하고 있으며 교회, 건물, 상점 및 기념물의 특별한 아름다움으로 둘러싸여 있습니다. 수블림 클리프는 사랑스럽게 복원된 1800년 궁전의 일부입니다.",
+            "Category": "Boutique",
+            "Tags":
+            [
+                "concierge",
+                "view",
+                "24-hour front desk service"
+            ],
+            "ParkingIncluded": "true",
+            "LastRenovationDate": "1960-02-06T00:00:00Z",
+            "Rating": 4.60,
+            "Address":
+            {
+                "StreetAddress": "7400 San Pedro Ave",
+                "City": "San Antonio",
+                "StateProvince": "TX",
+                "PostalCode": "78216",
+                "Country": "USA"
+            }
+        }
+    ]
+}
+
+### 검색
+# https://learn.microsoft.com/ko-kr/rest/api/searchservice/documents/search-get?view=rest-searchservice-2024-07-01
+GET  {{endpoint}}/indexes('{{index-name}}')/docs?search=*&$select=HotelName,Description&$count=true&api-version={{search-api-version}}  HTTP/1.1
+    Content-Type: application/json
+    api-key: {{apiKey}}
+
+### '클리프'로 검색
+GET  {{endpoint}}/indexes('{{index-name}}')/docs?search=클리프&$select=HotelName,Description&$count=true&api-version={{search-api-version}}  HTTP/1.1
+    Content-Type: application/json
+    api-key: {{apiKey}}
+
+### get 대신 post 도 가능합니다.
+# https://learn.microsoft.com/en-us/rest/api/searchservice/documents/search-post?view=rest-searchservice-2024-07-01
+POST  {{endpoint}}/indexes('{{index-name}}')/docs/search.post.search?api-version={{search-api-version}}  HTTP/1.1
+    Content-Type: application/json
+    api-key: {{apiKey}}
+
+{
+    "search": "클리프",
+    "select": "HotelName,Description",
+    "count": true
+}
+
+### 필터(Filter)
+GET  {{endpoint}}/indexes('{{index-name}}')/docs?search=hotels&$select=HotelId,HotelName,Rating&$filter=Rating gt 4&$order_by=Rating desc&api-version={{search-api-version}}  HTTP/1.1
+    Content-Type: application/json
+    api-key: {{apiKey}}
+
+### 특정 필드에서 검색
+GET  {{endpoint}}/indexes('{{index-name}}')/docs?search=sublime&searchFields=HotelName&$select=HotelId,HotelName&api-version={{search-api-version}}  HTTP/1.1
+    Content-Type: application/json
+    api-key: {{apiKey}}
+
+### Facets
+GET  {{endpoint}}/indexes('{{index-name}}')/docs?search=*&facet=Category&api-version={{search-api-version}}  HTTP/1.1
+    Content-Type: application/json
+    api-key: {{apiKey}}
+
+### document id로 검색
+GET  {{endpoint}}/indexes('{{index-name}}')/docs/3?$select=HotelName,Rating,Category&api-version={{search-api-version}}  HTTP/1.1
+    Content-Type: application/json
+    api-key: {{apiKey}}
+
+### 쿼리 자동완성
+# https://learn.microsoft.com/en-us/rest/api/searchservice/documents/autocomplete-get?view=rest-searchservice-2024-07-01
+GET  {{endpoint}}/indexes('{{index-name}}')/docs/search.autocomplete?search=sa&suggesterName=sg&autocompleteMode=twoTerms&api-version={{search-api-version}}  HTTP/1.1
+    Content-Type: application/json
+    api-key: {{apiKey}}
+
+### index 삭제
+# https://learn.microsoft.com/en-us/rest/api/searchservice/indexes/delete?view=rest-searchservice-2024-07-01
+DELETE  {{endpoint}}/indexes('{{index-name}}')?api-version={{search-api-version}} HTTP/1.1
+    Content-Type: application/json
+    api-key: {{apiKey}}
+
+### index 삭제 확인 
+GET  {{endpoint}}/indexes('{{index-name}}')?api-version={{search-api-version}}  HTTP/1.1
+    Content-Type: application/json
+    api-key: {{apiKey}}
