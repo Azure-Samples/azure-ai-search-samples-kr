@@ -1,0 +1,30 @@
+{
+    "name": "Azure AI Search samples - Korean",
+    "image": "mcr.microsoft.com/devcontainers/python:3.11",
+    "features": {
+		"ghcr.io/devcontainers/features/python:1.6.5": {
+			"version": "3.11.4",
+			"installJupyterlab": true
+		},
+		"ghcr.io/devcontainers/features/azure-cli:1.2.5": {},
+        "ghcr.io/azure/azure-dev/azd:latest": {}
+	},
+    "customizations": {
+        "codespaces": {
+			"openFiles": [
+				"README.md"
+			]
+		},
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+				"ms-toolsai.jupyter",
+				"github.copilot",
+                "ms-azuretools.azure-dev",
+                "humao.rest-client"
+            ]
+        }
+    },
+    "postCreateCommand": "pip3 install --user -r requirements.txt",
+    "runArgs": []
+}
