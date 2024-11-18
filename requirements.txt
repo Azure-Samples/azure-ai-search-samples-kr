@@ -11,6 +11,7 @@ azure-search-documents==11.6.0b4
 azure-mgmt-search==9.1.0
 openai
 tenacity
+azure-storage-blob
 azure-identity
 ipywidgets
 numpy
